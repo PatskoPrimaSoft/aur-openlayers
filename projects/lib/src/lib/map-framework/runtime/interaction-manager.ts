@@ -1717,4 +1717,15 @@ export class InteractionManager<
   private shouldStopClusterPropagation(): boolean {
     return true;
   }
+
+  dispose(): void {
+    this.listenerKeys.forEach((key) => Observable.unByKey(key));
+    this.listenerKeys.clear();
+    Array.from(this.nativeModifies.keys()).forEach((id) => this.teardownNativeModify(id));
+    this.hoverItems.clear();
+    this.selectedItems.clear();
+    this.activeTranslates.clear();
+    this.activeModifies.clear();
+    this.enabledState.clear();
+  }
 }

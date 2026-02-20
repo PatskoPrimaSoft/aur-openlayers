@@ -102,4 +102,14 @@ export class FlushScheduler {
   private shouldUpgradePolicy(current: FlushPolicy, next: FlushPolicy): boolean {
     return current === 'microtask' && next === 'raf';
   }
+
+  dispose(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
+    this.scheduledToken++;
+    this.queue.clear();
+    this.pendingPolicy = null;
+  }
 }

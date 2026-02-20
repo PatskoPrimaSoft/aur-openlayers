@@ -20,11 +20,15 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
   private readonly layers: Record<string, VectorLayer> = {};
   private readonly apis: Record<string, VectorLayerApi<any, any>> = {};
   private readonly interactions: InteractionManager<Layers>;
+  private readonly scheduler: FlushScheduler;
+  private readonly popupHost: PopupHost | undefined;
   private readonly ctx: MapContext;
 
   private constructor(private readonly map: OlMap, schema: MapSchema<Layers>) {
     const popupHost = schema.options?.popupHost ? new PopupHost(schema.options.popupHost) : undefined;
     const scheduler = new FlushScheduler(schema.options?.scheduler?.policy ?? 'microtask');
+    this.scheduler = scheduler;
+    this.popupHost = popupHost;
     const ctx = createMapContext(this.map, this.apis, popupHost, scheduler);
     this.ctx = ctx;
 
@@ -105,5 +109,12 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
 
   refreshEnabled(): void {
     this.interactions.refreshEnabled();
+  }
+
+  dispose(): void {
+    this.interactions.dispose();
+    this.popupHost?.dispose();
+    this.scheduler.dispose();
+    Object.values(this.layers).forEach((layer) => this.map.removeLayer(layer));
   }
 }

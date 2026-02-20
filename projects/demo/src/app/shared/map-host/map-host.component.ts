@@ -112,7 +112,8 @@ export class MapHostComponent implements AfterViewInit, OnDestroy {
     this.zone.runOutsideAngular(() => {
       this.controllers.forEach((controller) => controller.unbind?.());
       this.controllers = [];
-      this.ctx?.popupHost?.dispose();
+      this.resizeObserver?.disconnect();
+      this.layerManager?.dispose();
       this.layerManager = undefined;
       this.map?.setTarget(undefined);
       this.map = undefined;
