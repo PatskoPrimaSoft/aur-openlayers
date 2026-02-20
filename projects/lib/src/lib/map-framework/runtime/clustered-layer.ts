@@ -40,7 +40,7 @@ export class ClusteredVectorLayer<M, G extends Geometry, OPTS extends object>
   }
 
   override setModels(models: readonly M[]): void {
-    this.setModelsInternal(models);
+    super.setModels(models);
     this.scheduleInvalidate();
   }
 

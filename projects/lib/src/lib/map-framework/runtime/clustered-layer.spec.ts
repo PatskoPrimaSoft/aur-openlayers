@@ -7,7 +7,8 @@ import VectorSource from 'ol/source/Vector';
 import Style from 'ol/style/Style';
 import View from 'ol/View';
 
-import type { MapContext, VectorLayerDescriptor } from '../public/types';
+import type { MapContext, ModelsCollectionEvent, VectorLayerDescriptor } from '../public/types';
+import { DuplicateModelIdError } from '../public/types';
 import { createMapContext } from './map-context';
 import { ClusteredVectorLayer } from './clustered-layer';
 import { getFeatureStates, setFeatureStates } from './style/feature-states';
@@ -162,6 +163,76 @@ describe('ClusteredVectorLayer', () => {
 
     api.setClusteringEnabled?.(true);
     expect(getFeatureStates(featureA)).toEqual([]);
+  });
+
+  describe('setModels contract compliance', () => {
+    it('updates getAllModels after setModels', () => {
+      const { api } = createLayerSetup(false);
+      const modelA: Model = { id: 'a', coords: [1, 2] };
+      const modelB: Model = { id: 'b', coords: [3, 4] };
+
+      api.setModels([modelA, modelB]);
+      expect(api.getAllModels()).toEqual([modelA, modelB]);
+
+      api.setModels([modelA]);
+      expect(api.getAllModels()).toEqual([modelA]);
+    });
+
+    it('emits onModelsCollectionChanged with correct payload', () => {
+      const { api } = createLayerSetup(false);
+      const modelA: Model = { id: 'a', coords: [1, 2] };
+      const modelB: Model = { id: 'b', coords: [3, 4] };
+
+      const events: ModelsCollectionEvent<Model>[] = [];
+      api.onModelsCollectionChanged((event) => events.push(event));
+
+      api.setModels([modelA]);
+      expect(events.length).toBe(1);
+      expect(events[0].reason).toBe('set');
+      expect(events[0].prev).toEqual([]);
+      expect(events[0].next).toEqual([modelA]);
+
+      api.setModels([modelA, modelB]);
+      expect(events.length).toBe(2);
+      expect(events[1].reason).toBe('set');
+      expect(events[1].prev).toEqual([modelA]);
+      expect(events[1].next).toEqual([modelA, modelB]);
+    });
+
+    it('throws DuplicateModelIdError and preserves state', () => {
+      const { api } = createLayerSetup(false);
+      const modelA: Model = { id: 'a', coords: [1, 2] };
+      const duplicateA: Model = { id: 'a', coords: [9, 9] };
+
+      api.setModels([modelA]);
+      const handler = jasmine.createSpy('handler');
+      api.onModelsCollectionChanged(handler);
+
+      expect(() => api.setModels([modelA, duplicateA])).toThrowError(DuplicateModelIdError);
+      expect(api.getAllModels()).toEqual([modelA]);
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('supports addModel/removeModelsById/clear after setModels', () => {
+      const { api } = createLayerSetup(false);
+      const modelA: Model = { id: 'a', coords: [1, 2] };
+      const modelB: Model = { id: 'b', coords: [3, 4] };
+      const modelC: Model = { id: 'c', coords: [5, 6] };
+
+      api.setModels([modelA]);
+      api.addModel(modelB);
+      expect(api.getAllModels()).toEqual([modelA, modelB]);
+
+      api.addModels([modelC]);
+      expect(api.getAllModels()).toEqual([modelA, modelB, modelC]);
+
+      const removed = api.removeModelsById(['b']);
+      expect(removed).toBe(1);
+      expect(api.getAllModels()).toEqual([modelA, modelC]);
+
+      api.clear();
+      expect(api.getAllModels()).toEqual([]);
+    });
   });
 
   it('uses regular style for single clusters and clusterStyle for size > 1', () => {
