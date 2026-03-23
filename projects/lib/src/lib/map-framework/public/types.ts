@@ -492,6 +492,10 @@ export type MapContext = {
    * Батчинг для группировки mutate/invalidate.
    */
   batch: (fn: () => void, options?: BatchOptions) => void;
+  /** Центрирует карту на всех видимых слоях. No-op если нет фич. */
+  centerOnAllLayers: (opts?: ViewFitOptions) => void;
+  /** Центрирует карту на указанных слоях (скрытые пропускаются). No-op если нет фич. */
+  centerOnLayers: (layerIds: ReadonlyArray<string>, opts?: ViewFitOptions) => void;
 };
 
 /**
