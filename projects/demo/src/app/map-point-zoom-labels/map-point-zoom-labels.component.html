@@ -1,12 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Подписи точек на разных зумах</h2>
-    <p>
-      Демонстрация LOD-стилей: при увеличении масштаба подписи появляются, а при
-      отдалении скрываются.
-    </p>
-    <p>Приблизьте карту до {{ labelZoomThreshold }} и выше, чтобы увидеть названия точек.</p>
-  </header>
+  <app-demo-header
+    title="Подписи точек на разных зумах"
+    component="MapPointZoomLabelsComponent"
+    description="LOD-стили: подписи появляются при увеличении масштаба и скрываются при отдалении."
+    [features]="['style.base с zoom', 'LOD-рендеринг']"
+    [interactions]="['Масштабирование карты для появления/скрытия подписей']"
+  />
 
   <mff-map-host class="map-canvas" [config]="mapConfig" (ready)="onReady($event)"></mff-map-host>
 </section>

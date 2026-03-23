@@ -8,6 +8,7 @@ import Style from 'ol/style/Style';
 import Text from 'ol/style/Text';
 import { MapContext, VectorLayerApi, VectorLayerDescriptor } from '../../../../lib/src/lib/map-framework';
 import { MapHostComponent, MapHostConfig } from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 
 type MapPolygon = {
   id: string;
@@ -64,7 +65,7 @@ const POLYGONS: MapPolygon[] = [
 @Component({
   selector: 'app-map-polygons-labels',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-polygons-labels.component.html',
   styleUrl: './map-polygons-labels.component.scss',
 })

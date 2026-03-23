@@ -11,6 +11,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {
   applyGeometryToMapPoint,
   mapPointToGeometry,
@@ -31,7 +32,7 @@ type PointStyleOptions = {
 @Component({
   selector: 'app-map-point-zoom-labels',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-point-zoom-labels.component.html',
   styleUrl: './map-point-zoom-labels.component.scss',
 })

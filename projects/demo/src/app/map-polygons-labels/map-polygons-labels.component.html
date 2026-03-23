@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Карта с полигонами и подписями</h2>
-    <p>Три полигона с названиями, размещенными внутри каждой фигуры.</p>
-  </header>
+  <app-demo-header
+    title="Карта с полигонами и подписями"
+    component="MapPolygonsLabelsComponent"
+    description="Три полигона с названиями, размещенными внутри каждой фигуры."
+    [features]="['Polygon geometry', 'Text placement внутри полигона']"
+    [interactions]="['Просмотр полигонов на карте']"
+  />
 
   <mff-map-host class="map-canvas" [config]="mapConfig" (ready)="onReady($event)"></mff-map-host>
 </section>

@@ -10,6 +10,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {
   applyGeometryToMapPoint,
   mapPointToGeometry,
@@ -28,7 +29,7 @@ const POINTS = new MapPointGenerator().getByCount(5);
 @Component({
   selector: 'app-map-select-interaction',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-select-interaction.component.html',
   styleUrl: './map-select-interaction.component.scss',
 })

@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Попап точки при наведении</h2>
-    <p>Наведите курсор на точку, чтобы увидеть попап с данными объекта.</p>
-  </header>
+  <app-demo-header
+    title="Попап точки при наведении"
+    component="StaticMapPointPopupComponent"
+    description="Наведите курсор на точку, чтобы увидеть попап с данными объекта."
+    [features]="['interactions.hover', 'overlay popup']"
+    [interactions]="['Наведение курсора на точку']"
+  />
 
   <div class="map-wrapper">
     <mff-map-host

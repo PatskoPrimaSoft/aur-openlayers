@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Выбор точки на карте</h2>
-    <p>Клик по точке выделяет её на карте и показывает название.</p>
-  </header>
+  <app-demo-header
+    title="Выбор точки на карте"
+    component="MapSelectInteractionComponent"
+    description="Клик по точке выделяет её на карте и показывает название."
+    [features]="['interactions.select', 'onSelect callback']"
+    [interactions]="['Клик по точке для выделения']"
+  />
 
   <div class="map-selection">
     <span class="map-selection__label">Выбранная точка:</span>

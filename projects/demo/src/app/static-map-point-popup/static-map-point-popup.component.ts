@@ -10,6 +10,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {escapeHtml} from '../../../../lib/src/lib/map-framework/public-utils/html-escape.utils';
 import {
   applyGeometryToMapPoint,
@@ -35,7 +36,7 @@ const POINTS = new MapPointGenerator().getByIds([
 @Component({
   selector: 'app-static-map-point-popup',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './static-map-point-popup.component.html',
   styleUrl: './static-map-point-popup.component.scss',
 })

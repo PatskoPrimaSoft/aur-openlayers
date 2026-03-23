@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Клик по карте</h2>
-    <p>Нажмите на карту, чтобы получить координаты клика.</p>
-  </header>
+  <app-demo-header
+    title="Клик по карте"
+    component="MapClickInteractionComponent"
+    description="Нажмите на карту, чтобы получить координаты клика."
+    [features]="['interactions.click', 'onClick callback']"
+    [interactions]="['Клик по любой области карты']"
+  />
 
   <div class="map-selection">
     <span class="map-selection__label">Lat/Lng:</span>

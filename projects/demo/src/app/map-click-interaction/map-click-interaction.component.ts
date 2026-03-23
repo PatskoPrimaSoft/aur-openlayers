@@ -8,6 +8,7 @@ import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
 import { VectorLayerDescriptor } from '../../../../lib/src/lib/map-framework';
 import { MapHostComponent, MapHostConfig } from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 
 type ClickMarker = {
   id: string;
@@ -23,7 +24,7 @@ type ClickStyleOptions = {
 @Component({
   selector: 'app-map-click-interaction',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-click-interaction.component.html',
   styleUrl: './map-click-interaction.component.scss',
 })
