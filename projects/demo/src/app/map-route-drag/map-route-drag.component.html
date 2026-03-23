@@ -17,11 +17,11 @@
       </div>
 
       <p class="map-info__hint" *ngIf="phase === 'placing'">
-        Кликните по карте, чтобы добавить точку маршрута. Двойной клик по точке — удалить.
+        Кликните по карте, чтобы добавить контрольную точку маршрута.
       </p>
       <p class="map-info__hint" *ngIf="phase === 'routed'">
         Кликните по карте для добавления промежуточной точки.
-        Перетащите зелёную точку для корректировки. Двойной клик — удалить.
+        Перетащите зелёную точку для корректировки.
       </p>
 
       <div class="map-info__actions">
@@ -46,7 +46,7 @@
 
       <div class="map-info__points">
         <h4>Точки ({{ allWaypointsSorted.length }})</h4>
-        <ol class="point-list">
+        <ul class="point-list">
           <li *ngFor="let wp of allWaypointsSorted" [class.is-intermediate]="wp.type === 'intermediate'">
             <span class="point-marker" [class.point-marker--intermediate]="wp.type === 'intermediate'">
               {{ wp.type === 'primary' ? wp.orderIndex : '·' }}
@@ -54,8 +54,9 @@
             <span class="point-coords">
               {{ wp.lat | number:'1.4-4' }}, {{ wp.lng | number:'1.4-4' }}
             </span>
+            <button type="button" class="btn-delete" (click)="removePoint(wp.id)" title="Удалить">✕</button>
           </li>
-        </ol>
+        </ul>
       </div>
     </aside>
 

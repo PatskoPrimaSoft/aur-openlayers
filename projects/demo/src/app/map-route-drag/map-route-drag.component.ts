@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import type Geometry from 'ol/geom/Geometry';
 import { LineString, Point } from 'ol/geom';
 import { fromLonLat, toLonLat } from 'ol/proj';
-import DoubleClickZoom from 'ol/interaction/DoubleClickZoom';
 import CircleStyle from 'ol/style/Circle';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
@@ -12,7 +11,6 @@ import Text from 'ol/style/Text';
 import Polyline from 'ol/format/Polyline';
 import {
   MapContext,
-  MapController,
   VectorLayerApi,
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
@@ -90,21 +88,9 @@ export class MapRouteDragComponent implements OnDestroy {
   private lineLayerApi?: VectorLayerApi<RouteLine, LineString>;
   private unsubscribes: (() => void)[] = [];
   private polylineFormat = new Polyline();
-  private lastRouteCoords3857: number[][] = []; // for nearest-segment calculation
+  private lastRouteCoords3857: number[][] = [];
 
   readonly mapConfig: MapHostConfig<readonly VectorLayerDescriptor<any, Geometry, any>[]>;
-
-  // Controller to disable default OL DoubleClickZoom so our doubleClick interaction works
-  readonly disableDoubleClickZoom: MapController = {
-    bind: (ctx) => {
-      const map = ctx.map;
-      map.getInteractions().forEach((interaction) => {
-        if (interaction instanceof DoubleClickZoom) {
-          map.removeInteraction(interaction);
-        }
-      });
-    },
-  };
 
   get allWaypointsSorted(): RouteWaypoint[] {
     return [...this.primaryPoints, ...this.intermediatePoints]
@@ -150,6 +136,27 @@ export class MapRouteDragComponent implements OnDestroy {
     this.lastRouteCoords3857 = [];
     this.intermediateLayerApi?.clear();
     this.lineLayerApi?.clear();
+  }
+
+  removePoint(id: string): void {
+    const primary = this.primaryPoints.find((p) => p.id === id);
+    if (primary) {
+      this.primaryPoints = this.primaryPoints.filter((p) => p.id !== id);
+      this.primaryPoints = this.primaryPoints.map((p, i) => ({ ...p, orderIndex: i + 1 }));
+      this.primaryLayerApi?.setModels(this.primaryPoints);
+    } else {
+      this.intermediatePoints = this.intermediatePoints.filter((p) => p.id !== id);
+      this.intermediateLayerApi?.removeModelsById([id]);
+    }
+
+    const totalRemaining = this.primaryPoints.length + this.intermediatePoints.length;
+    if (this.phase === 'routed') {
+      if (totalRemaining >= 2) {
+        this.fetchRoute();
+      } else {
+        this.resetRoute();
+      }
+    }
   }
 
   ngOnDestroy(): void {
@@ -213,7 +220,6 @@ export class MapRouteDragComponent implements OnDestroy {
     const route = this.lastRouteCoords3857;
     if (route.length < 2) return waypoints[waypoints.length - 1].orderIndex + 0.5;
 
-    // Find nearest segment on route polyline
     let minDist = Infinity;
     let nearestSegIdx = 0;
     for (let i = 0; i < route.length - 1; i++) {
@@ -224,7 +230,6 @@ export class MapRouteDragComponent implements OnDestroy {
       }
     }
 
-    // Map segment index to position between waypoints
     const fraction = nearestSegIdx / (route.length - 1);
     const approxIdx = fraction * (waypoints.length - 1);
     const lowerIdx = Math.floor(approxIdx);
@@ -274,36 +279,6 @@ export class MapRouteDragComponent implements OnDestroy {
     this.intermediatePoints = [...this.intermediatePoints, wp];
     this.intermediateLayerApi?.addModel(wp);
     this.fetchRoute();
-  }
-
-  private removePrimaryPoint(id: string): void {
-    this.primaryPoints = this.primaryPoints.filter((p) => p.id !== id);
-    // Renumber remaining primary points
-    this.primaryPoints = this.primaryPoints.map((p, i) => ({ ...p, orderIndex: i + 1 }));
-    this.primaryLayerApi?.setModels(this.primaryPoints);
-  }
-
-  private removeIntermediatePoint(id: string): void {
-    this.intermediatePoints = this.intermediatePoints.filter((p) => p.id !== id);
-    this.intermediateLayerApi?.removeModelsById([id]);
-  }
-
-  private removeAnyPoint(id: string): void {
-    const primary = this.primaryPoints.find((p) => p.id === id);
-    if (primary) {
-      this.removePrimaryPoint(id);
-    } else {
-      this.removeIntermediatePoint(id);
-    }
-
-    const totalRemaining = this.primaryPoints.length + this.intermediatePoints.length;
-    if (this.phase === 'routed') {
-      if (totalRemaining >= 2) {
-        this.fetchRoute();
-      } else {
-        this.resetRoute();
-      }
-    }
   }
 
   // --- Schema builder ---
@@ -393,15 +368,6 @@ export class MapRouteDragComponent implements OnDestroy {
                     return true;
                   },
                 },
-                doubleClick: {
-                  onDoubleClick: ({ items }) => {
-                    const model = items[0]?.model;
-                    if (model) {
-                      this.zone.run(() => this.removeAnyPoint(model.id));
-                    }
-                    return true;
-                  },
-                },
                 translate: {
                   cursor: 'grab',
                   hitTolerance: 6,
@@ -471,15 +437,6 @@ export class MapRouteDragComponent implements OnDestroy {
                     return true;
                   },
                 },
-                doubleClick: {
-                  onDoubleClick: ({ items }) => {
-                    const model = items[0]?.model;
-                    if (model) {
-                      this.zone.run(() => this.removeAnyPoint(model.id));
-                    }
-                    return true;
-                  },
-                },
               },
             },
           },
@@ -490,7 +447,6 @@ export class MapRouteDragComponent implements OnDestroy {
         zoom: 11,
       },
       osm: true,
-      controllers: [this.disableDoubleClickZoom],
     };
   }
 }
