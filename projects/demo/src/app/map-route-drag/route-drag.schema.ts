@@ -140,7 +140,11 @@ export function buildMapConfig(
             id: (m: RouteWaypoint) => m.id,
             geometry: {
               fromModel: (m: RouteWaypoint) => new Point(fromLonLat([m.lng, m.lat])),
-              applyGeometryToModel: (prev: RouteWaypoint) => prev,
+              applyGeometryToModel: (prev: RouteWaypoint, geom: Geometry): RouteWaypoint => {
+                if (!(geom instanceof Point)) return prev;
+                const [lng, lat] = toLonLat(geom.getCoordinates());
+                return { ...prev, lng, lat };
+              },
             },
             style: {
               base: (m: RouteWaypoint): PointStyleOpts => ({
@@ -148,6 +152,7 @@ export function buildMapConfig(
                 label: String(m.orderIndex),
               }),
               states: {
+                DRAG: (): Partial<PointStyleOpts> => ({ color: '#1d4ed8', radius: 16 }),
                 HOVER: (): Partial<PointStyleOpts> => ({ strokeColor: '#f97316' }),
               },
               render: renderPoint,
@@ -163,6 +168,10 @@ export function buildMapConfig(
                   }
                   return true;
                 },
+              },
+              translate: {
+                cursor: 'grab', hitTolerance: 6, state: 'DRAG',
+                onEnd: () => { cb.onTranslateEnd(); return true; },
               },
             },
           },

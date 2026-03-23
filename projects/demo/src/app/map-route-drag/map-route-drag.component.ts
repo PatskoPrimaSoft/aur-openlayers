@@ -74,15 +74,26 @@ export class MapRouteDragComponent implements OnDestroy {
 
     ctx.map.on('moveend', () => this.updateArrows());
 
-    const unsub = this.intermediateLayerApi?.onModelsChanged?.((changes) => {
+    const syncPoints = (
+      list: () => RouteWaypoint[],
+      set: (pts: RouteWaypoint[]) => void,
+    ) => (changes: { next: RouteWaypoint }[]) => {
       this.zone.run(() => {
-        changes.forEach(({ next }) => {
-          this.intermediatePoints = this.intermediatePoints.map(p => p.id === next.id ? next : p);
-        });
+        let pts = list();
+        changes.forEach(({ next }) => { pts = pts.map(p => p.id === next.id ? next : p); });
+        set(pts);
         this.rebuildSorted();
       });
-    });
-    if (unsub) this.unsubscribes.push(unsub);
+    };
+
+    const unsub1 = this.primaryLayerApi?.onModelsChanged?.(
+      syncPoints(() => this.primaryPoints, pts => this.primaryPoints = pts),
+    );
+    const unsub2 = this.intermediateLayerApi?.onModelsChanged?.(
+      syncPoints(() => this.intermediatePoints, pts => this.intermediatePoints = pts),
+    );
+    if (unsub1) this.unsubscribes.push(unsub1);
+    if (unsub2) this.unsubscribes.push(unsub2);
   }
 
   buildRoute(): void {
