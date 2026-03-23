@@ -12,6 +12,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {
   applyGeometryToMapPoint,
   mapPointToGeometry,
@@ -48,7 +49,7 @@ const COLOR_OPTIONS = [
 @Component({
   selector: 'app-map-point-change-style',
   standalone: true,
-  imports: [CommonModule, MapHostComponent],
+  imports: [CommonModule, MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-point-change-style.component.html',
   styleUrl: './map-point-change-style.component.scss',
 })

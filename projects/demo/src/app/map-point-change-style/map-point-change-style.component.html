@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Смена стиля точек</h2>
-    <p>Переключайте цвет точек и смотрите обновление стилей прямо на карте.</p>
-  </header>
+  <app-demo-header
+    title="Смена стиля точек"
+    component="MapPointChangeStyleComponent"
+    description="Переключайте цвет точек и смотрите обновление стилей прямо на карте."
+    [features]="['style.states', 'mutate для смены стиля']"
+    [interactions]="['Клик по кнопкам цвета в боковой панели']"
+  />
 
   <div class="map-layout">
     <div class="map-controls">

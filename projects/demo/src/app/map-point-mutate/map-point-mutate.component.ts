@@ -13,6 +13,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {
   applyGeometryToMapPoint,
   mapPointToGeometry,
@@ -32,7 +33,7 @@ const POINTS: MapPoint[] = new MapPointGenerator().getByCount(3);
 @Component({
   selector: 'app-map-point-mutate',
   standalone: true,
-  imports: [CommonModule, FormsModule, MapHostComponent],
+  imports: [CommonModule, FormsModule, MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-point-mutate.component.html',
   styleUrl: './map-point-mutate.component.scss',
 })

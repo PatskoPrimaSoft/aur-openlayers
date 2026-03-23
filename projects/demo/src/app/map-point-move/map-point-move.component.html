@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Перетаскивание точки</h2>
-    <p>Перетаскивайте маркер на карте и наблюдайте обновление координат.</p>
-  </header>
+  <app-demo-header
+    title="Перетаскивание точки"
+    component="MapPointMoveComponent"
+    description="Перетаскивайте маркер на карте и наблюдайте обновление координат."
+    [features]="['interactions.translate', 'onDragEnd callback']"
+    [interactions]="['Перетаскивание маркера по карте']"
+  />
 
   <div class="map-layout">
     <div class="map-controls">

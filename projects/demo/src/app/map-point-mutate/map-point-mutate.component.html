@@ -1,8 +1,11 @@
 <section class="map-container">
-  <header class="map-header">
-    <h2>Редактирование данных точек</h2>
-    <p>Меняйте имя и координаты в форме и наблюдайте обновление точек на карте.</p>
-  </header>
+  <app-demo-header
+    title="Редактирование данных точек"
+    component="MapPointMutateComponent"
+    description="Меняйте имя и координаты в форме и наблюдайте обновление точек на карте."
+    [features]="['mutate', 'centerOnModel']"
+    [interactions]="['Изменение полей формы в боковой панели']"
+  />
 
   <div class="map-layout">
     <div class="map-controls">

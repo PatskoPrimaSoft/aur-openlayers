@@ -11,6 +11,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import {MapHostComponent, MapHostConfig} from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import {applyGeometryToMapPoint, mapPointToGeometry, MapPoint} from '../shared/map-point';
 
 type PointStyleOptions = {
@@ -24,7 +25,7 @@ const INITIAL_POINT = new MapPoint('minsk-center', 'Точка Минска', 53
 @Component({
   selector: 'app-map-point-move',
   standalone: true,
-  imports: [MapHostComponent],
+  imports: [MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-point-move.component.html',
   styleUrl: './map-point-move.component.scss',
 })
