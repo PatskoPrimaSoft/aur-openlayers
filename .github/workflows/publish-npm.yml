@@ -69,4 +69,4 @@ jobs:
         run: npx ng build lib
 
       - name: Publish to npm
-        run: npm publish dist/lib --provenance --access public
+        run: npm publish ./dist/lib --provenance --access public
