@@ -8,40 +8,17 @@ import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Style from 'ol/style/Style';
 import Text from 'ol/style/Text';
-import Polyline from 'ol/format/Polyline';
 import {
   MapContext,
   VectorLayerApi,
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import { MapHostComponent, MapHostConfig } from '../shared/map-host/map-host.component';
+import { RouteWaypoint, RouteLine, LAYER_ID } from './route-drag.models';
+import { computeOrderIndexForClick } from './geometry.utils';
+import { fetchOsrmRoute } from './osrm.service';
 
-// --- Models ---
-
-interface RouteWaypoint {
-  id: string;
-  lat: number;
-  lng: number;
-  orderIndex: number;
-  type: 'primary' | 'intermediate';
-}
-
-interface RouteLine {
-  id: string;
-  coordinates: [number, number][];
-}
-
-// --- Constants ---
-
-const LAYER_ID = {
-  ROUTE_LINE: 'route-line',
-  PRIMARY_POINTS: 'primary-points',
-  INTERMEDIATE_POINTS: 'intermediate-points',
-} as const;
-
-const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
-
-// --- Style types ---
+// --- Style ---
 
 type LineStyleOpts = { color: string; width: number };
 
@@ -51,8 +28,6 @@ type PointStyleOpts = {
   strokeColor: string;
   label: string;
 };
-
-// --- Style helpers ---
 
 function renderPoint(opts: PointStyleOpts): Style[] {
   return [new Style({
@@ -92,7 +67,6 @@ export class MapRouteDragComponent implements OnDestroy {
   private intermediateLayerApi?: VectorLayerApi<RouteWaypoint, Geometry>;
   private lineLayerApi?: VectorLayerApi<RouteLine, LineString>;
   private unsubscribes: (() => void)[] = [];
-  private polylineFormat = new Polyline();
   private lastRouteCoords3857: number[][] = [];
   private intermediateLabels = new Map<string, string>();
 
@@ -177,11 +151,10 @@ export class MapRouteDragComponent implements OnDestroy {
   }
 
   private recalcIntermediateLabels(): void {
-    const sorted = this.sortedWaypoints;
     this.intermediateLabels.clear();
     let lastPrimaryIndex = 0;
     let counter = 0;
-    for (const wp of sorted) {
+    for (const wp of this.sortedWaypoints) {
       if (wp.type === 'primary') {
         lastPrimaryIndex = wp.orderIndex;
         counter = 0;
@@ -190,41 +163,23 @@ export class MapRouteDragComponent implements OnDestroy {
         this.intermediateLabels.set(wp.id, `${lastPrimaryIndex}.${counter}`);
       }
     }
-    // Force style refresh — setModels re-renders all features
+    // Force style refresh
     this.intermediateLayerApi?.setModels(this.intermediatePoints);
   }
 
   private async fetchRoute(): Promise<void> {
-    const waypoints = this.sortedWaypoints;
-    if (waypoints.length < 2) return;
+    if (this.sortedWaypoints.length < 2) return;
 
     this.abortController?.abort();
     this.abortController = new AbortController();
 
-    const coords = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
-    const url = `${OSRM_BASE}/${coords}?overview=full&geometries=polyline`;
-
     this.zone.run(() => (this.loading = true));
     try {
-      const res = await fetch(url, { signal: this.abortController.signal });
-      const data = await res.json();
+      const result = await fetchOsrmRoute(this.sortedWaypoints, this.abortController.signal);
+      if (!result) return;
 
-      if (data.code !== 'Ok' || !data.routes?.[0]) {
-        console.error('OSRM error:', data);
-        return;
-      }
-
-      const lineGeom = this.polylineFormat.readGeometry(data.routes[0].geometry, {
-        dataProjection: 'EPSG:4326',
-        featureProjection: 'EPSG:3857',
-      }) as LineString;
-      const coords3857 = lineGeom.getCoordinates();
-
-      this.lastRouteCoords3857 = coords3857;
-      this.lineLayerApi?.setModels([{
-        id: 'route',
-        coordinates: coords3857.map(c => toLonLat(c) as [number, number]),
-      }]);
+      this.lastRouteCoords3857 = result.coords3857;
+      this.lineLayerApi?.setModels([{ id: 'route', coordinates: result.coordsLonLat }]);
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       console.error('Fetch error:', err);
@@ -233,45 +188,10 @@ export class MapRouteDragComponent implements OnDestroy {
     }
   }
 
-  private computeOrderIndexForClick(clickCoord3857: number[]): number {
-    const waypoints = this.sortedWaypoints;
-    const route = this.lastRouteCoords3857;
-
-    if (waypoints.length < 2 || route.length < 2) {
-      return (waypoints[waypoints.length - 1]?.orderIndex ?? 0) + 0.5;
-    }
-
-    let minDist = Infinity;
-    let nearestSegIdx = 0;
-    for (let i = 0; i < route.length - 1; i++) {
-      const d = this.distToSegment(clickCoord3857, route[i], route[i + 1]);
-      if (d < minDist) {
-        minDist = d;
-        nearestSegIdx = i;
-      }
-    }
-
-    const fraction = nearestSegIdx / (route.length - 1);
-    const approxIdx = fraction * (waypoints.length - 1);
-    const lowerIdx = Math.floor(approxIdx);
-    const upperIdx = Math.min(lowerIdx + 1, waypoints.length - 1);
-    return (waypoints[lowerIdx].orderIndex + waypoints[upperIdx].orderIndex) / 2;
-  }
-
-  private distToSegment(p: number[], a: number[], b: number[]): number {
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    const lenSq = dx * dx + dy * dy;
-    if (lenSq === 0) return Math.hypot(p[0] - a[0], p[1] - a[1]);
-    const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / lenSq));
-    return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy));
-  }
-
   private addPrimaryPoint(lon: number, lat: number): void {
     const wp: RouteWaypoint = {
       id: this.nextId('primary'),
-      lat,
-      lng: lon,
+      lat, lng: lon,
       orderIndex: this.primaryPoints.length + 1,
       type: 'primary',
     };
@@ -283,9 +203,8 @@ export class MapRouteDragComponent implements OnDestroy {
   private addIntermediatePoint(lon: number, lat: number, clickCoord3857: number[]): void {
     const wp: RouteWaypoint = {
       id: this.nextId('intermediate'),
-      lat,
-      lng: lon,
-      orderIndex: this.computeOrderIndexForClick(clickCoord3857),
+      lat, lng: lon,
+      orderIndex: computeOrderIndexForClick(clickCoord3857, this.sortedWaypoints, this.lastRouteCoords3857),
       type: 'intermediate',
     };
     this.intermediatePoints = [...this.intermediatePoints, wp];
@@ -333,9 +252,7 @@ export class MapRouteDragComponent implements OnDestroy {
               },
               style: {
                 base: (m: RouteWaypoint): PointStyleOpts => ({
-                  color: '#10b981',
-                  radius: 10,
-                  strokeColor: '#ffffff',
+                  color: '#10b981', radius: 10, strokeColor: '#ffffff',
                   label: this.intermediateLabels.get(m.id) ?? '',
                 }),
                 states: {
@@ -357,9 +274,7 @@ export class MapRouteDragComponent implements OnDestroy {
                   },
                 },
                 translate: {
-                  cursor: 'grab',
-                  hitTolerance: 6,
-                  state: 'DRAG',
+                  cursor: 'grab', hitTolerance: 6, state: 'DRAG',
                   onEnd: () => { this.fetchRoute(); return true; },
                 },
               },
@@ -376,9 +291,7 @@ export class MapRouteDragComponent implements OnDestroy {
               },
               style: {
                 base: (m: RouteWaypoint): PointStyleOpts => ({
-                  color: '#2563eb',
-                  radius: 14,
-                  strokeColor: '#ffffff',
+                  color: '#2563eb', radius: 14, strokeColor: '#ffffff',
                   label: String(m.orderIndex),
                 }),
                 states: {
