@@ -45,9 +45,9 @@
       </div>
 
       <div class="map-info__points">
-        <h4>Точки ({{ allWaypointsSorted.length }})</h4>
+        <h4>Точки ({{ sortedWaypoints.length }})</h4>
         <ul class="point-list">
-          <li *ngFor="let wp of allWaypointsSorted" [class.is-intermediate]="wp.type === 'intermediate'">
+          <li *ngFor="let wp of sortedWaypoints" [class.is-intermediate]="wp.type === 'intermediate'">
             <span class="point-marker" [class.point-marker--intermediate]="wp.type === 'intermediate'">
               {{ wp.type === 'primary' ? wp.orderIndex : getIntermediateLabel(wp.id) }}
             </span>
