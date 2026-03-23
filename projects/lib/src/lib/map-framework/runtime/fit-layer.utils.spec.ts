@@ -1,4 +1,5 @@
-import {toOlFitOptions} from './fit-layer.utils';
+import {toOlFitOptions, collectLayersExtent} from './fit-layer.utils';
+import type {VectorLayerApi} from '../public/types';
 
 describe('toOlFitOptions', () => {
   it('returns defaults when opts is undefined', () => {
@@ -64,5 +65,75 @@ describe('toOlFitOptions', () => {
       padding: [64, 64, 64, 64],
       duration: 0,
     });
+  });
+});
+
+describe('collectLayersExtent', () => {
+  type Extent4 = [number, number, number, number];
+  const mockLayer = (visible: boolean, extent: Extent4 | null): Pick<VectorLayerApi<any, any>, 'isVisible' | 'getExtent'> => ({
+    isVisible: () => visible,
+    getExtent: () => extent,
+  });
+  const asLayers = (obj: Record<string, Pick<VectorLayerApi<any, any>, 'isVisible' | 'getExtent'>>) =>
+    obj as unknown as Record<string, VectorLayerApi<any, any>>;
+
+  it('aggregates extents from multiple visible layers', () => {
+    const layers = asLayers({
+      a: mockLayer(true, [0, 0, 10, 10]),
+      b: mockLayer(true, [20, 20, 30, 30]),
+    });
+
+    expect(collectLayersExtent(layers)).toEqual([0, 0, 30, 30]);
+  });
+
+  it('skips hidden layers', () => {
+    const layers = asLayers({
+      a: mockLayer(true, [0, 0, 10, 10]),
+      b: mockLayer(false, [100, 100, 200, 200]),
+    });
+
+    expect(collectLayersExtent(layers)).toEqual([0, 0, 10, 10]);
+  });
+
+  it('ignores non-existent layerIds', () => {
+    const layers = asLayers({
+      a: mockLayer(true, [0, 0, 10, 10]),
+    });
+
+    expect(collectLayersExtent(layers, ['a', 'missing'])).toEqual([0, 0, 10, 10]);
+  });
+
+  it('returns null for empty layerIds array', () => {
+    const layers = asLayers({
+      a: mockLayer(true, [0, 0, 10, 10]),
+    });
+
+    expect(collectLayersExtent(layers, [])).toBeNull();
+  });
+
+  it('returns null when all layers have no features', () => {
+    const layers = asLayers({
+      a: mockLayer(true, null),
+      b: mockLayer(true, null),
+    });
+
+    expect(collectLayersExtent(layers)).toBeNull();
+  });
+
+  it('returns null when all layers are hidden', () => {
+    const layers = asLayers({
+      a: mockLayer(false, [0, 0, 10, 10]),
+    });
+
+    expect(collectLayersExtent(layers)).toBeNull();
+  });
+
+  it('uses only specified layerIds when provided', () => {
+    const layers = asLayers({
+      a: mockLayer(true, [0, 0, 10, 10]),
+      b: mockLayer(true, [50, 50, 60, 60]),
+    });
+
+    expect(collectLayersExtent(layers, ['b'])).toEqual([50, 50, 60, 60]);
   });
 });

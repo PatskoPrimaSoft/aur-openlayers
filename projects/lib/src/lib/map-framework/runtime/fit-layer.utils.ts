@@ -1,4 +1,5 @@
-import type {ViewFitOptions, ViewFitPadding} from '../public/types';
+import {createEmpty, extend, isEmpty} from 'ol/extent';
+import type {VectorLayerApi, ViewFitOptions, ViewFitPadding} from '../public/types';
 
 /**
  * Default padding for View#fit in pixels.
@@ -37,4 +38,23 @@ export function toOlFitOptions(opts?: ViewFitOptions) {
     fitOpts.maxZoom = opts.maxZoom;
   }
   return fitOpts;
+}
+
+export function collectLayersExtent(
+  layers: Record<string, VectorLayerApi<any, any>>,
+  layerIds?: ReadonlyArray<string>,
+): import('ol/extent').Extent | null {
+  const extent = createEmpty();
+  const ids = layerIds ?? Object.keys(layers);
+
+  for (const id of ids) {
+    const layer = layers[id];
+    if (!layer || !layer.isVisible()) continue;
+    const layerExtent = layer.getExtent();
+    if (layerExtent) {
+      extend(extent, layerExtent);
+    }
+  }
+
+  return isEmpty(extent) ? null : extent;
 }
