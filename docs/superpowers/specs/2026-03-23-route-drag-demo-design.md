@@ -44,8 +44,8 @@ Three vector layers, bottom to top:
 
 ### Phase 1 — Placing points (before route is built)
 
-- **Click on map** → creates a primary point with incremented orderIndex
-- **Double-click on a primary point** → deletes it, renumbers remaining points
+- **Click on map** → creates a primary point with incremented orderIndex. The click interaction is defined on the PRIMARY_POINTS layer; when `items` is empty (click on empty space), a new point is created at the click coordinate.
+- **Double-click on a primary point** → deletes it, renumbers remaining points. The doubleClick interaction is defined on the PRIMARY_POINTS layer.
 - No route line exists yet
 - "Build Route" button enabled when 2+ primary points
 
@@ -57,7 +57,7 @@ Three vector layers, bottom to top:
   - Create an intermediate point at the new vertex position
   - Insert it with an `orderIndex` between the two surrounding waypoints
   - Recalculate route via OSRM
-- **Double-click on any point** (primary or intermediate) → delete, recalculate route (if 2+ points remain, otherwise clear route and return to phase 1)
+- **Double-click on any point** → delete, recalculate route (if 2+ points remain, otherwise clear route and return to phase 1). The doubleClick interaction is defined on both PRIMARY_POINTS and INTERMEDIATE_POINTS layers.
 - **Translate on INTERMEDIATE_POINTS** — drag intermediate points to adjust position:
   - `onEnd`: recalculate route via OSRM
 - Primary points are NOT draggable
@@ -65,7 +65,13 @@ Three vector layers, bottom to top:
 
 ### Detecting new vertex after modify
 
-In the `onEnd` callback of the modify interaction, the modified LineString geometry contains the new vertex. Compare the current LineString coordinates with the previously stored `routeCoordinates` to identify the inserted vertex and its segment index. Use the segment index to compute the `orderIndex` for the new intermediate point.
+The `applyGeometryToModel` for ROUTE_LINE is a no-op (returns `prev` unchanged) — the demo manages route geometry exclusively through OSRM responses.
+
+In the `onEnd` callback of the modify interaction, read the new coordinates from `item.feature.getGeometry().getCoordinates()`. Compare with the previously stored `routeCoordinates` to identify the inserted vertex and its segment index. Use the segment index to compute the `orderIndex` for the new intermediate point.
+
+### orderIndex strategy for intermediate points
+
+Use fractional indexing: if an intermediate point is inserted between waypoints with orderIndex 2 and 3, assign it orderIndex 2.5. This avoids renumbering all points on every insert. Primary points always have integer orderIndex values.
 
 ## Styles
 
@@ -111,7 +117,7 @@ OSRM returns polyline-encoded geometry. Decode to `[lat, lng][]`, convert to `[l
 ### Error handling
 
 - OSRM error or network failure → show message, keep previous route line unchanged
-- No debounce. If a request is in-flight, cancel it (or let last-write-win).
+- No debounce. If a request is in-flight, cancel it via `AbortController` before sending a new one.
 
 ## Component Structure
 
@@ -135,7 +141,7 @@ loading: boolean
 ### Template
 
 ```html
-<app-map-host [config]="mapConfig" (ready)="onMapReady($event)">
+<mff-map-host [config]="mapConfig" (ready)="onReady($event)">
   <div class="controls">
     <button (click)="buildRoute()" [disabled]="primaryPoints.length < 2 || loading">
       Build Route
@@ -145,7 +151,7 @@ loading: boolean
     </button>
     <span *ngIf="loading">Loading...</span>
   </div>
-</app-map-host>
+</mff-map-host>
 ```
 
 ### Route registration
