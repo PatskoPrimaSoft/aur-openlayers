@@ -37,7 +37,6 @@ type PointStyleOptions = {
   styleUrl: './map-point-zoom-labels.component.scss',
 })
 export class MapPointZoomLabelsComponent {
-  readonly labelZoomThreshold = LABEL_ZOOM_THRESHOLD;
   readonly mapConfig: MapHostConfig<
     readonly VectorLayerDescriptor<MapPoint, Geometry, PointStyleOptions>[]
   > = {
