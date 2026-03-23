@@ -1,0 +1,64 @@
+<section class="map-container">
+  <header class="map-header">
+    <h2>Маршрут с перетаскиванием</h2>
+    <p>
+      Расставьте точки на карте кликами, постройте маршрут, затем перетаскивайте
+      линию маршрута для добавления промежуточных точек. Двойной клик удаляет точку.
+    </p>
+  </header>
+
+  <div class="map-layout">
+    <aside class="map-info">
+      <div class="map-info__header">
+        <h3>Управление</h3>
+        <span class="map-info__status" [class.is-active]="loading">
+          {{ loading ? 'загрузка…' : phase === 'routed' ? 'маршрут' : 'расстановка' }}
+        </span>
+      </div>
+
+      <p class="map-info__hint" *ngIf="phase === 'placing'">
+        Кликните по карте, чтобы добавить точку маршрута. Двойной клик по точке — удалить.
+      </p>
+      <p class="map-info__hint" *ngIf="phase === 'routed'">
+        Перетащите линию маршрута для добавления промежуточной точки.
+        Двойной клик по любой точке — удалить.
+      </p>
+
+      <div class="map-info__actions">
+        <button
+          type="button"
+          class="btn btn--primary"
+          (click)="buildRoute()"
+          [disabled]="primaryPoints.length < 2 || loading"
+          *ngIf="phase === 'placing'"
+        >
+          Построить маршрут
+        </button>
+        <button
+          type="button"
+          class="btn btn--ghost"
+          (click)="resetRoute()"
+          *ngIf="phase === 'routed'"
+        >
+          Сбросить маршрут
+        </button>
+      </div>
+
+      <div class="map-info__points">
+        <h4>Точки ({{ allWaypointsSorted.length }})</h4>
+        <ol class="point-list">
+          <li *ngFor="let wp of allWaypointsSorted" [class.is-intermediate]="wp.type === 'intermediate'">
+            <span class="point-marker" [class.point-marker--intermediate]="wp.type === 'intermediate'">
+              {{ wp.type === 'primary' ? wp.orderIndex : '·' }}
+            </span>
+            <span class="point-coords">
+              {{ wp.lat | number:'1.4-4' }}, {{ wp.lng | number:'1.4-4' }}
+            </span>
+          </li>
+        </ol>
+      </div>
+    </aside>
+
+    <mff-map-host class="map-canvas" [config]="mapConfig" (ready)="onReady($event)"></mff-map-host>
+  </div>
+</section>
