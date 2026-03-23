@@ -49,7 +49,7 @@
         <ul class="point-list">
           <li *ngFor="let wp of allWaypointsSorted" [class.is-intermediate]="wp.type === 'intermediate'">
             <span class="point-marker" [class.point-marker--intermediate]="wp.type === 'intermediate'">
-              {{ wp.type === 'primary' ? wp.orderIndex : '·' }}
+              {{ wp.type === 'primary' ? wp.orderIndex : getIntermediateLabel(wp.id) }}
             </span>
             <span class="point-coords">
               {{ wp.lat | number:'1.4-4' }}, {{ wp.lng | number:'1.4-4' }}

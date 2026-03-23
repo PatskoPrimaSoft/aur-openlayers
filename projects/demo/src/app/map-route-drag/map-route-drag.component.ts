@@ -59,6 +59,7 @@ type IntermediatePointStyleOpts = {
   color: string;
   radius: number;
   strokeColor: string;
+  label: string;
 };
 
 // --- Helpers ---
@@ -92,9 +93,33 @@ export class MapRouteDragComponent implements OnDestroy {
 
   readonly mapConfig: MapHostConfig<readonly VectorLayerDescriptor<any, Geometry, any>[]>;
 
+  private intermediateLabels = new Map<string, string>();
+
   get allWaypointsSorted(): RouteWaypoint[] {
     return [...this.primaryPoints, ...this.intermediatePoints]
       .sort((a, b) => a.orderIndex - b.orderIndex);
+  }
+
+  getIntermediateLabel(id: string): string {
+    return this.intermediateLabels.get(id) ?? '·';
+  }
+
+  private recalcIntermediateLabels(): void {
+    const sorted = this.allWaypointsSorted;
+    this.intermediateLabels.clear();
+    let lastPrimaryIndex = 0;
+    let counter = 0;
+    for (const wp of sorted) {
+      if (wp.type === 'primary') {
+        lastPrimaryIndex = wp.orderIndex;
+        counter = 0;
+      } else {
+        counter++;
+        this.intermediateLabels.set(wp.id, `${lastPrimaryIndex}.${counter}`);
+      }
+    }
+    // Trigger style refresh on intermediate layer
+    this.intermediateLayerApi?.setModels(this.intermediatePoints);
   }
 
   constructor(private readonly zone: NgZone) {
@@ -152,10 +177,13 @@ export class MapRouteDragComponent implements OnDestroy {
     const totalRemaining = this.primaryPoints.length + this.intermediatePoints.length;
     if (this.phase === 'routed') {
       if (totalRemaining >= 2) {
+        this.recalcIntermediateLabels();
         this.fetchRoute();
       } else {
         this.resetRoute();
       }
+    } else {
+      // In placing phase, no intermediate labels to recalc
     }
   }
 
@@ -278,6 +306,7 @@ export class MapRouteDragComponent implements OnDestroy {
     };
     this.intermediatePoints = [...this.intermediatePoints, wp];
     this.intermediateLayerApi?.addModel(wp);
+    this.recalcIntermediateLabels();
     this.fetchRoute();
   }
 
@@ -330,28 +359,38 @@ export class MapRouteDragComponent implements OnDestroy {
                 },
               },
               style: {
-                base: () => ({
+                base: (model: RouteWaypoint) => ({
                   color: '#10b981',
-                  radius: 8,
+                  radius: 10,
                   strokeColor: '#ffffff',
+                  label: this.intermediateLabels.get(model.id) ?? '',
                 }),
                 states: {
                   DRAG: () => ({
                     color: '#f97316',
-                    radius: 9,
+                    radius: 11,
                   }),
                   HOVER: () => ({
                     strokeColor: '#f97316',
                   }),
                 },
-                render: (opts: IntermediatePointStyleOpts) =>
+                render: (opts: IntermediatePointStyleOpts) => [
                   new Style({
                     image: new CircleStyle({
                       radius: opts.radius,
                       fill: new Fill({ color: opts.color }),
                       stroke: new Stroke({ color: opts.strokeColor, width: 2 }),
                     }),
+                    text: opts.label ? new Text({
+                      text: opts.label,
+                      fill: new Fill({ color: '#ffffff' }),
+                      stroke: new Stroke({ color: 'rgba(15, 23, 42, 0.45)', width: 2 }),
+                      font: '600 9px "Inter", sans-serif',
+                      textAlign: 'center',
+                      textBaseline: 'middle',
+                    }) : undefined,
                   }),
+                ],
               },
               interactions: {
                 hover: {

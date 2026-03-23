@@ -61,6 +61,10 @@ Three vector layers, bottom to top:
 
 When a new intermediate point is added by clicking, find the nearest segment of the route polyline. Determine which two waypoints that segment lies between. Assign a fractional orderIndex between them (e.g., between orderIndex 2 and 3 → assign 2.5). Primary points always have integer orderIndex values.
 
+### Composite labels for intermediate points
+
+Intermediate points display composite labels showing which segment they belong to and their sequential index within that segment. Format: `{segmentStart}.{indexWithinSegment}`. For example, intermediate points between primary checkpoints 2 and 3 are labeled "2.1", "2.2", "2.3", etc. Labels are recalculated dynamically from the sorted waypoint list — when a point is added or removed, all intermediate labels update.
+
 ## Styles
 
 ### ROUTE_LINE
@@ -71,7 +75,7 @@ When a new intermediate point is added by clicking, find the nearest segment of 
 - State HOVER: orange (#f97316) stroke
 
 ### INTERMEDIATE_POINTS
-- Base: green circle (#10b981), radius 8px, no label
+- Base: green circle (#10b981), radius 10px, white composite label inside (e.g. "2.1")
 - State DRAG: orange (#f97316) fill
 - State HOVER: orange stroke
 
