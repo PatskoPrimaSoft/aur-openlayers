@@ -11,8 +11,16 @@ export interface RouteLine {
   coordinates: [number, number][];
 }
 
+export interface RouteArrow {
+  id: string;
+  lng: number;
+  lat: number;
+  rotation: number; // radians, clockwise from north
+}
+
 export const LAYER_ID = {
   ROUTE_LINE: 'route-line',
+  ROUTE_ARROWS: 'route-arrows',
   PRIMARY_POINTS: 'primary-points',
   INTERMEDIATE_POINTS: 'intermediate-points',
 } as const;

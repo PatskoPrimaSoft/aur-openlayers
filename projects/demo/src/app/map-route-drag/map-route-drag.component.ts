@@ -14,9 +14,10 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import { MapHostComponent, MapHostConfig } from '../shared/map-host/map-host.component';
-import { RouteWaypoint, RouteLine, LAYER_ID } from './route-drag.models';
-import { computeOrderIndexForClick } from './geometry.utils';
+import { RouteWaypoint, RouteLine, RouteArrow, LAYER_ID } from './route-drag.models';
+import { computeOrderIndexForClick, generateRouteArrows } from './geometry.utils';
 import { fetchOsrmRoute } from './osrm.service';
+import RegularShape from 'ol/style/RegularShape';
 
 // --- Style ---
 
@@ -66,6 +67,7 @@ export class MapRouteDragComponent implements OnDestroy {
   private primaryLayerApi?: VectorLayerApi<RouteWaypoint, Geometry>;
   private intermediateLayerApi?: VectorLayerApi<RouteWaypoint, Geometry>;
   private lineLayerApi?: VectorLayerApi<RouteLine, LineString>;
+  private arrowLayerApi?: VectorLayerApi<RouteArrow, Geometry>;
   private unsubscribes: (() => void)[] = [];
   private lastRouteCoords3857: number[][] = [];
   private intermediateLabels = new Map<string, string>();
@@ -84,6 +86,7 @@ export class MapRouteDragComponent implements OnDestroy {
     this.primaryLayerApi = ctx.layers[LAYER_ID.PRIMARY_POINTS] as VectorLayerApi<RouteWaypoint, Geometry> | undefined;
     this.intermediateLayerApi = ctx.layers[LAYER_ID.INTERMEDIATE_POINTS] as VectorLayerApi<RouteWaypoint, Geometry> | undefined;
     this.lineLayerApi = ctx.layers[LAYER_ID.ROUTE_LINE] as VectorLayerApi<RouteLine, LineString> | undefined;
+    this.arrowLayerApi = ctx.layers[LAYER_ID.ROUTE_ARROWS] as VectorLayerApi<RouteArrow, Geometry> | undefined;
 
     const unsub = this.intermediateLayerApi?.onModelsChanged?.((changes) => {
       this.zone.run(() => {
@@ -108,6 +111,7 @@ export class MapRouteDragComponent implements OnDestroy {
     this.intermediateLabels.clear();
     this.intermediateLayerApi?.clear();
     this.lineLayerApi?.clear();
+    this.arrowLayerApi?.clear();
     this.rebuildSorted();
   }
 
@@ -180,6 +184,7 @@ export class MapRouteDragComponent implements OnDestroy {
 
       this.lastRouteCoords3857 = result.coords3857;
       this.lineLayerApi?.setModels([{ id: 'route', coordinates: result.coordsLonLat }]);
+      this.arrowLayerApi?.setModels(generateRouteArrows(result.coords3857));
     } catch (err: any) {
       if (err.name === 'AbortError') return;
       console.error('Fetch error:', err);
@@ -238,8 +243,31 @@ export class MapRouteDragComponent implements OnDestroy {
             },
           },
           {
-            id: LAYER_ID.INTERMEDIATE_POINTS,
+            id: LAYER_ID.ROUTE_ARROWS,
             zIndex: 2,
+            feature: {
+              id: (m: RouteArrow) => m.id,
+              geometry: {
+                fromModel: (m: RouteArrow) => new Point(fromLonLat([m.lng, m.lat])),
+                applyGeometryToModel: (prev: RouteArrow) => prev,
+              },
+              style: {
+                base: (m: RouteArrow) => ({ rotation: m.rotation }),
+                render: (opts: { rotation: number }) => new Style({
+                  image: new RegularShape({
+                    points: 3,
+                    radius: 6,
+                    rotation: opts.rotation,
+                    fill: new Fill({ color: '#2563eb' }),
+                    stroke: new Stroke({ color: '#ffffff', width: 1 }),
+                  }),
+                }),
+              },
+            },
+          },
+          {
+            id: LAYER_ID.INTERMEDIATE_POINTS,
+            zIndex: 3,
             feature: {
               id: (m: RouteWaypoint) => m.id,
               geometry: {
@@ -282,7 +310,7 @@ export class MapRouteDragComponent implements OnDestroy {
           },
           {
             id: LAYER_ID.PRIMARY_POINTS,
-            zIndex: 3,
+            zIndex: 4,
             feature: {
               id: (m: RouteWaypoint) => m.id,
               geometry: {
