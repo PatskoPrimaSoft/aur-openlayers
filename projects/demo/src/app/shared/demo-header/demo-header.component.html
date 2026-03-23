@@ -1,0 +1,22 @@
+<header class="demo-header">
+  <div class="demo-header__top">
+    <a routerLink="/" class="demo-header__back">← К списку</a>
+    <div class="demo-header__title-block">
+      <h2 class="demo-header__title">{{ title }}</h2>
+      <span class="demo-header__component">{{ component }}</span>
+    </div>
+  </div>
+
+  <p class="demo-header__description">{{ description }}</p>
+
+  <div class="demo-header__meta" *ngIf="features.length || interactions.length">
+    <div class="demo-header__features" *ngIf="features.length">
+      <span class="demo-header__label">Фичи:</span>
+      <span class="demo-header__tag" *ngFor="let f of features">{{ f }}</span>
+    </div>
+    <div class="demo-header__interactions" *ngIf="interactions.length">
+      <span class="demo-header__label">Взаимодействие:</span>
+      <span>{{ interactions.join(', ') }}</span>
+    </div>
+  </div>
+</header>
