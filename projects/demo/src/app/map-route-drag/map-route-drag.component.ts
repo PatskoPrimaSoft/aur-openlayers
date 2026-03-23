@@ -81,7 +81,8 @@ export class MapRouteDragComponent implements OnDestroy {
   phase: 'placing' | 'routed' = 'placing';
   primaryPoints: RouteWaypoint[] = [];
   intermediatePoints: RouteWaypoint[] = [];
-  routeCoordinates: [number, number][] = [];
+  routeCoordinates: [number, number][] = []; // [lng, lat] for OSRM requests
+  routeCoordinates3857: number[][] = [];     // projected coords for modify vertex detection
   loading = false;
 
   private abortController: AbortController | null = null;
@@ -136,6 +137,7 @@ export class MapRouteDragComponent implements OnDestroy {
     this.phase = 'placing';
     this.intermediatePoints = [];
     this.routeCoordinates = [];
+    this.routeCoordinates3857 = [];
     this.intermediateLayerApi?.clear();
     this.lineLayerApi?.clear();
   }
@@ -178,6 +180,7 @@ export class MapRouteDragComponent implements OnDestroy {
 
       this.zone.run(() => {
         this.routeCoordinates = coordsLonLat;
+        this.routeCoordinates3857 = coords3857;
         this.loading = false;
       });
 
@@ -194,16 +197,21 @@ export class MapRouteDragComponent implements OnDestroy {
 
   // --- Vertex detection after modify ---
 
-  private findInsertedVertex(newCoords: [number, number][]): { coord: [number, number]; segmentIndex: number } | null {
-    const oldCoords = this.routeCoordinates;
+  private findInsertedVertex3857(newCoords: number[][]): { coord: number[]; segmentIndex: number } | null {
+    const oldCoords = this.routeCoordinates3857;
     if (newCoords.length <= oldCoords.length) return null;
 
-    // Find the first coordinate that doesn't match the old set
-    // The modify interaction inserts exactly one vertex
+    // The modify interaction inserts exactly one vertex.
+    // Walk both arrays; when they diverge, the new coord is the inserted one.
+    // Compare in EPSG:3857 to avoid floating-point drift from projection round-trips.
+    const EPS = 0.01; // ~0.01 meters in 3857
+    let oldIdx = 0;
     for (let i = 0; i < newCoords.length; i++) {
-      const oldIdx = i >= oldCoords.length ? -1 : i;
-      if (oldIdx === -1 || newCoords[i][0] !== oldCoords[i][0] || newCoords[i][1] !== oldCoords[i][1]) {
-        // This is the inserted vertex. The segment index is i (between old[i-1] and old[i])
+      if (oldIdx < oldCoords.length &&
+          Math.abs(newCoords[i][0] - oldCoords[oldIdx][0]) < EPS &&
+          Math.abs(newCoords[i][1] - oldCoords[oldIdx][1]) < EPS) {
+        oldIdx++;
+      } else {
         return { coord: newCoords[i], segmentIndex: i };
       }
     }
@@ -343,13 +351,13 @@ export class MapRouteDragComponent implements OnDestroy {
                   onEnd: ({ item }) => {
                     const geom = item.feature.getGeometry() as LineString;
                     const newCoords3857 = geom.getCoordinates();
-                    const newCoordsLonLat = newCoords3857.map((c) => toLonLat(c) as [number, number]);
 
-                    const inserted = this.findInsertedVertex(newCoordsLonLat);
+                    const inserted = this.findInsertedVertex3857(newCoords3857);
                     if (inserted) {
+                      const [lng, lat] = toLonLat(inserted.coord) as [number, number];
                       const orderIndex = this.computeOrderIndexForSegment(inserted.segmentIndex);
                       this.zone.run(() => {
-                        this.addIntermediatePoint(inserted.coord[0], inserted.coord[1], orderIndex);
+                        this.addIntermediatePoint(lng, lat, orderIndex);
                       });
                       this.fetchRoute();
                     }
