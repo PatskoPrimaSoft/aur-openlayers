@@ -120,4 +120,11 @@ export const routes: Routes = [
         (m) => m.MapTranslateThresholdEventsComponent,
       ),
   },
+  {
+    path: 'map-route-drag',
+    loadComponent: () =>
+      import('./map-route-drag/map-route-drag.component').then(
+        (m) => m.MapRouteDragComponent,
+      ),
+  },
 ];
