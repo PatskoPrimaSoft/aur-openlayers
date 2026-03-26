@@ -218,6 +218,18 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'map-ripple-demo',
+    data: {
+      title: 'Ripple-анимация при выборе точки',
+      component: 'MapRippleDemoComponent',
+      description: 'Панель с городами и анимация "кругов на воде" при клике.',
+    },
+    loadComponent: () =>
+      import('./map-ripple-demo/map-ripple-demo.component').then(
+        (m) => m.MapRippleDemoComponent,
+      ),
+  },
+  {
     path: 'center-on-layers',
     data: {
       title: 'Центрирование по слоям',

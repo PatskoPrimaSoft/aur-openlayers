@@ -1,4 +1,5 @@
 import {createEmpty, extend, isEmpty} from 'ol/extent';
+import type OlMap from 'ol/Map';
 import type {VectorLayerApi, ViewFitOptions, ViewFitPadding} from '../public/types';
 
 /**
@@ -28,13 +29,15 @@ export function toOlPadding(
   return [p.top, p.right, p.bottom, p.left];
 }
 
-export function toOlFitOptions(opts?: ViewFitOptions) {
+export function toOlFitOptions(opts?: ViewFitOptions, map?: OlMap) {
   const padding = toOlPadding(opts?.padding) ?? DEFAULT_OL_PADDING;
   const duration = opts?.duration ?? DEFAULT_FIT_DURATION;
 
   // OL View#fit options are a plain object; keep it minimal & typed-friendly
   const fitOpts: any = {padding, duration};
-  if (opts?.maxZoom != null) {
+  if (opts?.keepZoom && map) {
+    fitOpts.maxZoom = map.getView().getZoom();
+  } else if (opts?.maxZoom != null) {
     fitOpts.maxZoom = opts.maxZoom;
   }
   return fitOpts;

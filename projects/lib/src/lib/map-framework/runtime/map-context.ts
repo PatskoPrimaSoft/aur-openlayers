@@ -17,11 +17,11 @@ export const createMapContext = (
     batch: (fn: () => void, options?: BatchOptions) => scheduler.batch(fn, options),
     centerOnAllLayers: (opts?: ViewFitOptions) => {
       const extent = collectLayersExtent(layers);
-      if (extent) map.getView().fit(extent, toOlFitOptions(opts));
+      if (extent) map.getView().fit(extent, toOlFitOptions(opts, map));
     },
     centerOnLayers: (layerIds: ReadonlyArray<string>, opts?: ViewFitOptions) => {
       const extent = collectLayersExtent(layers, layerIds);
-      if (extent) map.getView().fit(extent, toOlFitOptions(opts));
+      if (extent) map.getView().fit(extent, toOlFitOptions(opts, map));
     },
   };
 };

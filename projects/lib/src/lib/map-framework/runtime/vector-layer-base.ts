@@ -210,7 +210,7 @@ export abstract class VectorLayerBase<M, G extends Geometry, OPTS extends object
     if (!extent || isEmpty(extent)) {
       return;
     }
-    this.ctx.map.getView().fit(extent, toOlFitOptions(opts));
+    this.ctx.map.getView().fit(extent, toOlFitOptions(opts, this.ctx.map));
   }
 
   /** Fit view to a single feature by id. No-op if feature/geometry is missing. */
@@ -220,7 +220,7 @@ export abstract class VectorLayerBase<M, G extends Geometry, OPTS extends object
     if (!geom) {
       return;
     }
-    this.ctx.map.getView().fit(geom.getExtent(), toOlFitOptions(opts));
+    this.ctx.map.getView().fit(geom.getExtent(), toOlFitOptions(opts, this.ctx.map));
   }
 
   /**
@@ -243,7 +243,7 @@ export abstract class VectorLayerBase<M, G extends Geometry, OPTS extends object
       return;
     }
 
-    this.ctx.map.getView().fit(extent, toOlFitOptions(opts));
+    this.ctx.map.getView().fit(extent, toOlFitOptions(opts, this.ctx.map));
   }
 
   getExtent(): import('ol/extent').Extent | null {

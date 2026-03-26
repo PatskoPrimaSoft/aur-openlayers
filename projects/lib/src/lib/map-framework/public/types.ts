@@ -292,6 +292,8 @@ export type ViewFitOptions = {
   duration?: number;
   /** Верхний предел увеличения. */
   maxZoom?: number;
+  /** Сохранить текущий зум (maxZoom = текущий зум). Перекрывает maxZoom. */
+  keepZoom?: boolean;
 };
 
 /**
