@@ -1,6 +1,9 @@
-.container {
+.content {
   display: flex;
-  height: 100vh;
+  height: 60vh;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12);
 }
 
 .panel {
@@ -53,6 +56,6 @@
   color: #64748b;
 }
 
-.map {
-  flex: 1;
+:host ::ng-deep .content .map-host__canvas {
+  height: 100%;
 }

@@ -13,6 +13,7 @@ import {
   VectorLayerDescriptor,
 } from '../../../../lib/src/lib/map-framework';
 import { MapHostComponent, MapHostConfig } from '../shared/map-host/map-host.component';
+import { DemoHeaderComponent } from '../shared/demo-header/demo-header.component';
 import { RippleEffect } from '../shared/ripple-effect';
 
 interface City {
@@ -36,7 +37,7 @@ type CityStyleOpts = { color: string; radius: number };
 @Component({
   selector: 'app-map-ripple-demo',
   standalone: true,
-  imports: [CommonModule, MapHostComponent],
+  imports: [CommonModule, MapHostComponent, DemoHeaderComponent],
   templateUrl: './map-ripple-demo.component.html',
   styleUrl: './map-ripple-demo.component.scss',
 })

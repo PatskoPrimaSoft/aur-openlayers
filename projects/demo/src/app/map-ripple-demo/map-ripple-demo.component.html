@@ -1,19 +1,29 @@
-<div class="container">
-  <div class="panel">
-    <div class="panel-header">Points</div>
-    <div class="panel-list">
-      @for (city of cities; track city.id) {
-        <div
-          class="panel-item"
-          [class.selected]="city.id === selectedId"
-          (click)="onCityClick(city)"
-        >
-          <span class="city-name">{{ city.name }}</span>
-          <span class="city-coords">{{ city.lat.toFixed(2) }}, {{ city.lng.toFixed(2) }}</span>
-        </div>
-      }
-    </div>
-  </div>
+<section class="map-container">
+  <app-demo-header
+    title="Ripple-анимация при выборе точки"
+    component="MapRippleDemoComponent"
+    description="Панель с городами и анимация «кругов на воде» при клике. Демонстрирует centerOnModel с keepZoom и переиспользуемый RippleEffect."
+    [features]="['centerOnModel', 'keepZoom', 'RippleEffect', 'postrender canvas']"
+    [interactions]="['Клик по элементу панели центрирует карту и запускает ripple']"
+  />
 
-  <mff-map-host class="map" [config]="mapConfig" (ready)="onReady($event)"></mff-map-host>
-</div>
+  <div class="content">
+    <div class="panel">
+      <div class="panel-header">Points</div>
+      <div class="panel-list">
+        @for (city of cities; track city.id) {
+          <div
+            class="panel-item"
+            [class.selected]="city.id === selectedId"
+            (click)="onCityClick(city)"
+          >
+            <span class="city-name">{{ city.name }}</span>
+            <span class="city-coords">{{ city.lat.toFixed(2) }}, {{ city.lng.toFixed(2) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <mff-map-host class="map-canvas" [config]="mapConfig" (ready)="onReady($event)"></mff-map-host>
+  </div>
+</section>
