@@ -15,6 +15,7 @@ import { ClusteredVectorLayer } from './clustered-layer';
 import { PlainVectorLayer } from './plain-layer';
 import { PopupHost } from './popup-host';
 import { FlushScheduler } from './scheduler';
+import { ArrowDecorationManager } from './decorations/arrow-decoration-manager';
 
 export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any, any, any>[]> {
   private readonly layers: Record<string, VectorLayer> = {};
@@ -23,6 +24,7 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
   private readonly scheduler: FlushScheduler;
   private readonly popupHost: PopupHost | undefined;
   private readonly ctx: MapContext;
+  private readonly decorationManagers: ArrowDecorationManager[] = [];
 
   private constructor(private readonly map: OlMap, schema: MapSchema<Layers>) {
     const popupHost = schema.options?.popupHost ? new PopupHost(schema.options.popupHost) : undefined;
@@ -73,6 +75,16 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
       this.layers[descriptor.id] = layer;
       this.apis[descriptor.id] = api;
       this.map.addLayer(layer);
+
+      if (descriptor.feature.decorations?.arrows) {
+        const decorationManager = new ArrowDecorationManager({
+          map: this.map,
+          parentLayer: layer,
+          parentApi: api,
+          config: descriptor.feature.decorations.arrows,
+        });
+        this.decorationManagers.push(decorationManager);
+      }
     });
 
     this.interactions = new InteractionManager({
@@ -115,6 +127,7 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
     this.interactions.dispose();
     this.popupHost?.dispose();
     this.scheduler.dispose();
+    this.decorationManagers.forEach((dm) => dm.dispose());
     Object.values(this.layers).forEach((layer) => this.map.removeLayer(layer));
   }
 }
