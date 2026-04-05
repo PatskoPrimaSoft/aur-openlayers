@@ -69,7 +69,7 @@ describe('ArrowDecorationManager', () => {
     }
   };
 
-  it('creates an internal layer with zIndex = parent + 1', () => {
+  it('creates an internal layer with zIndex = parent + 2', () => {
     const { map, parentLayer, api } = createTestSetup();
     const initialLayerCount = map.getLayers().getLength();
 

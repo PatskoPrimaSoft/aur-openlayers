@@ -167,14 +167,16 @@ describe('LayerManager', () => {
     // 1 user layer + 1 arrow layer + 1 buffer layer = 3
     expect(map.getLayers().getLength()).toBe(initialLayers + 3);
 
-    // Verify z-index ordering: buffer(1) < parent(1+1=2 via addLayer) < arrows(3)
+    // Verify z-index ordering: buffer(1) < parent(2) < arrows(4)
     const layers = map.getLayers().getArray();
     const bufferLayer = layers.find((l) => l.get('id') === '__decoration_buffer');
     const arrowLayer = layers.find((l) => l.get('id') === '__decoration_arrows');
+    const routeLayer = layers.find((l) => l.get('id') === 'route');
     expect(bufferLayer).toBeDefined();
     expect(arrowLayer).toBeDefined();
-    expect(bufferLayer!.getZIndex()).toBe(1);   // parentZIndex
-    expect(arrowLayer!.getZIndex()).toBe(3);    // parentZIndex + 2
+    expect(bufferLayer!.getZIndex()).toBe(1);   // original parentZIndex
+    expect(routeLayer!.getZIndex()).toBe(2);    // parentZIndex + 1 (bumped for buffer)
+    expect(arrowLayer!.getZIndex()).toBe(4);    // parentZIndex + 1 + 2 (bumped parent + 2)
 
     // Set models and flush to trigger generation
     manager.getApi('route')!.setModels([{ id: 'r1', coords: [[0, 0], [1000, 0]] }]);

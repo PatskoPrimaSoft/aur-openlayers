@@ -77,16 +77,6 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
       this.apis[descriptor.id] = api;
       this.map.addLayer(layer);
 
-      if (descriptor.feature.decorations?.arrows) {
-        const decorationManager = new ArrowDecorationManager({
-          map: this.map,
-          parentLayer: layer,
-          parentApi: api,
-          config: descriptor.feature.decorations.arrows,
-        });
-        this.decorationManagers.push(decorationManager);
-      }
-
       if (descriptor.feature.decorations?.buffer) {
         const bufferManager = new BufferDecorationManager({
           map: this.map,
@@ -95,6 +85,17 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
           config: descriptor.feature.decorations.buffer,
         });
         this.decorationManagers.push(bufferManager);
+        layer.setZIndex((descriptor.zIndex ?? 0) + 1);
+      }
+
+      if (descriptor.feature.decorations?.arrows) {
+        const decorationManager = new ArrowDecorationManager({
+          map: this.map,
+          parentLayer: layer,
+          parentApi: api,
+          config: descriptor.feature.decorations.arrows,
+        });
+        this.decorationManagers.push(decorationManager);
       }
     });
 
