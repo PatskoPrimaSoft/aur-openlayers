@@ -16,6 +16,7 @@ import { PlainVectorLayer } from './plain-layer';
 import { PopupHost } from './popup-host';
 import { FlushScheduler } from './scheduler';
 import { ArrowDecorationManager } from './decorations/arrow-decoration-manager';
+import { BufferDecorationManager } from './decorations/buffer-decoration-manager';
 
 export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any, any, any>[]> {
   private readonly layers: Record<string, VectorLayer> = {};
@@ -24,7 +25,7 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
   private readonly scheduler: FlushScheduler;
   private readonly popupHost: PopupHost | undefined;
   private readonly ctx: MapContext;
-  private readonly decorationManagers: ArrowDecorationManager[] = [];
+  private readonly decorationManagers: (ArrowDecorationManager | BufferDecorationManager)[] = [];
 
   private constructor(private readonly map: OlMap, schema: MapSchema<Layers>) {
     const popupHost = schema.options?.popupHost ? new PopupHost(schema.options.popupHost) : undefined;
@@ -84,6 +85,16 @@ export class LayerManager<Layers extends readonly VectorLayerDescriptor<any, any
           config: descriptor.feature.decorations.arrows,
         });
         this.decorationManagers.push(decorationManager);
+      }
+
+      if (descriptor.feature.decorations?.buffer) {
+        const bufferManager = new BufferDecorationManager({
+          map: this.map,
+          parentLayer: layer,
+          parentApi: api,
+          config: descriptor.feature.decorations.buffer,
+        });
+        this.decorationManagers.push(bufferManager);
       }
     });
 
