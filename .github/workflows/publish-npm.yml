@@ -25,8 +25,9 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
+          registry-url: https://registry.npmjs.org/
 
       - name: Check version change
         id: version
@@ -61,6 +62,4 @@ jobs:
 
       - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
-        run: |
-          npm config set registry https://registry.npmjs.org/
-          npm publish ./dist/lib --provenance --access public
+        run: npm publish ./dist/lib --access public
