@@ -1,6 +1,6 @@
 {
   "name": "aur-openlayers",
-  "version": "19.6.6",
+  "version": "19.6.7",
   "peerDependencies": {
     "@angular/common": "^19.2.0",
     "@angular/core": "^19.2.0",

@@ -143,15 +143,13 @@ describe('BufferDecorationManager', () => {
     api.setModels([{ id: 'line1', coords: [[0, 0], [500, 0]] }]);
     flushRAF();
 
-    parentLayer.setVisible(false);
-    api.setModels([{ id: 'line1', coords: [[0, 0], [500, 0]] }]);
-    flushRAF();
-
     const bufferLayer = map.getLayers().item(map.getLayers().getLength() - 1) as VectorLayer;
+
+    parentLayer.setVisible(false);
     expect(bufferLayer.getVisible()).toBe(false);
 
-    const bufferSource = bufferLayer.getSource() as VectorSource<Geometry>;
-    expect(bufferSource.getFeatures().length).toBe(0);
+    parentLayer.setVisible(true);
+    expect(bufferLayer.getVisible()).toBe(true);
 
     manager.dispose();
   });

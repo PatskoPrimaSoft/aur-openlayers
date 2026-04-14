@@ -185,16 +185,13 @@ describe('ArrowDecorationManager', () => {
     api.setModels([{ id: 'line1', coords: [[0, 0], [500, 0]] }]);
     flushRAF();
 
-    parentLayer.setVisible(false);
-    // Trigger rebuild to sync
-    api.setModels([{ id: 'line1', coords: [[0, 0], [500, 0]] }]);
-    flushRAF();
-
     const arrowLayer = map.getLayers().item(map.getLayers().getLength() - 1) as VectorLayer;
+
+    parentLayer.setVisible(false);
     expect(arrowLayer.getVisible()).toBe(false);
 
-    const arrowSource = arrowLayer.getSource() as VectorSource<Point>;
-    expect(arrowSource.getFeatures().length).toBe(0);
+    parentLayer.setVisible(true);
+    expect(arrowLayer.getVisible()).toBe(true);
 
     manager.dispose();
   });

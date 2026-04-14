@@ -86,6 +86,7 @@ export class ArrowDecorationManager {
   private readonly parentLayer: VectorLayer;
   private readonly parentApi: VectorLayerApi<any, any>;
   private readonly moveEndKey: EventsKey;
+  private readonly visibilityKey: EventsKey;
   private readonly unsubCollection: Unsubscribe;
   private readonly unsubChanges: Unsubscribe | undefined;
   private rafId: number | null = null;
@@ -107,6 +108,7 @@ export class ArrowDecorationManager {
     this.syncVisibility();
     this.syncOpacity();
 
+    this.visibilityKey = this.parentLayer.on('change:visible', () => this.syncVisibility());
     this.moveEndKey = this.map.on('moveend', () => this.scheduleUpdate());
 
     this.unsubCollection = this.parentApi.onModelsCollectionChanged(() => this.scheduleUpdate());
@@ -181,6 +183,7 @@ export class ArrowDecorationManager {
       this.rafId = null;
     }
     unByKey(this.moveEndKey);
+    unByKey(this.visibilityKey);
     this.unsubCollection();
     this.unsubChanges?.();
     this.map.removeLayer(this.layer);

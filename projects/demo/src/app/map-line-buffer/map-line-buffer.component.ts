@@ -40,6 +40,7 @@ export class MapLineBufferComponent {
   bufferDistance = 500;
   bufferOpacity = 0.15;
   cap: 'round' | 'flat' = 'round';
+  layerVisible = true;
 
   private lineApi?: VectorLayerApi<LineModel, LineString>;
 
@@ -123,6 +124,11 @@ export class MapLineBufferComponent {
     this.cap = value;
     (this.bufferConfig as any).cap = value;
     this.triggerRebuild();
+  }
+
+  toggleLayerVisible(): void {
+    this.layerVisible = !this.layerVisible;
+    this.lineApi?.setVisible(this.layerVisible);
   }
 
   private triggerRebuild(): void {

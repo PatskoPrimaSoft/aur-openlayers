@@ -66,6 +66,20 @@
         </div>
       </div>
 
+      <div class="control-group">
+        <label class="control-label">Видимость слоя</label>
+        <div class="control-buttons">
+          <button
+            type="button"
+            class="btn"
+            [class.btn--active]="layerVisible"
+            (click)="toggleLayerVisible()"
+          >
+            {{ layerVisible ? 'Скрыть слой' : 'Показать слой' }}
+          </button>
+        </div>
+      </div>
+
       <div class="map-info__hint">
         <p>Полная ширина коридора: <strong>{{ bufferDistance * 2 }} м</strong></p>
         <p>Буферный полигон автоматически обновляется при изменении параметров.</p>
